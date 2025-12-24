@@ -1,0 +1,244 @@
+/* Мобильные стили */
+@media (max-width: 1199px) {
+    /* Базовая мобильная настройка */
+    body {
+        padding-top: 0;
+        padding-bottom: 70px; /* Для фиксированной навигации внизу */
+    }
+    
+    /* Навигация внизу экрана */
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        padding: 0.75rem 0;
+        border-top: 1px solid #e1e5eb;
+    }
+    
+    .mobile-nav .nav-item {
+        text-align: center;
+    }
+    
+    .mobile-nav .nav-link {
+        color: #666;
+        font-size: 0.75rem;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+    }
+    
+    .mobile-nav .nav-link.active {
+        color: var(--primary);
+    }
+    
+    .mobile-nav .nav-link i {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    /* Скрываем десктопную навигацию */
+    .desktop-nav {
+        display: none !important;
+    }
+    
+    /* Карточки товаров - 1 колонка */
+    .product-grid .col {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .product-card {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 1rem;
+    }
+    
+    .product-card img {
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+    }
+    
+    .product-card .card-body {
+        padding: 1rem;
+        flex-grow: 1;
+    }
+    
+    .product-card .card-title {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-card .price {
+        font-size: 1.1rem;
+    }
+    
+    /* Увеличенные кнопки для мобильных */
+    .btn-mobile {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Упрощенные формы */
+    .form-control-mobile {
+        font-size: 16px; /* Предотвращает зум на iOS */
+        padding: 0.75rem;
+        height: 44px;
+    }
+    
+    /* Контейнеры с отступами */
+    .container-mobile {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* Увеличенные иконки */
+    .icon-large {
+        font-size: 1.5rem;
+    }
+    
+    /* Адаптивные изображения */
+    .img-responsive {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Корзина для мобильных */
+    .cart-item-mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .cart-item-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    /* Кнопки +/- в корзине */
+    .quantity-control-mobile {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .quantity-btn-mobile {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        border: 2px solid #e1e5eb;
+        background: white;
+    }
+    
+    /* Поиск на мобильных */
+    .search-mobile {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        padding: 0.75rem 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin: -1rem -15px 1rem;
+    }
+    
+    /* Скрываем сложные элементы на мобильных */
+    .desktop-only {
+        display: none !important;
+    }
+    
+    /* Показываем мобильные элементы */
+    .mobile-only {
+        display: block !important;
+    }
+    
+    /* Улучшаем читаемость текста */
+    p, span, div, li {
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+        margin-top: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    h3 {
+        font-size: 1.25rem;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Минимальный размер кликабельных элементов */
+    a.btn, button, input[type="submit"], input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Анимации для мобильных */
+    .fade-in-mobile {
+        animation: fadeInMobile 0.3s ease-in;
+    }
+    
+    @keyframes fadeInMobile {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+/* Особые стили для очень маленьких экранов */
+@media (max-width: 360px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .product-card {
+        flex-direction: column;
+    }
+    
+    .product-card img {
+        width: 100%;
+        height: 150px;
+    }
+    
+    .mobile-nav .nav-link span {
+        font-size: 0.7rem;
+    }
+}

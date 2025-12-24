@@ -1,0 +1,401 @@
+@page
+@model OnlineStore.Pages.Catalog.IndexModel
+@{
+    ViewData["Title"] = "Каталог товаров";
+    
+    // Создаем словарь для сортировки в коде C#
+    var sortOptions = new Dictionary<string, string>
+    {
+        ["name_asc"] = "По названию (А-Я)",
+        ["name_desc"] = "По названию (Я-А)",
+        ["price_asc"] = "По цене (сначала дешевые)",
+        ["price_desc"] = "По цене (сначала дорогие)",
+        ["newest"] = "Сначала новые"
+    };
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>Каталог товаров</h1>
+                <form method="get" class="d-flex ms-auto" style="max-width: 400px;">
+                    <input type="text" class="form-control me-2" 
+                           placeholder="Поиск товаров..." 
+                           name="search" 
+                           value="@Model.SearchTerm">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Боковая панель фильтров (только для ПК) -->
+        <div class="col-lg-3 desktop-only">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Фильтры</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Категории -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Категории</h6>
+                            <div class="list-group list-group-flush">
+                                <a href="?categoryId=" 
+                                   class="list-group-item list-group-item-action @(string.IsNullOrEmpty(Model.CategoryId.ToString()) ? "active" : "")">
+                                    Все категории
+                                </a>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    var isActive = Model.CategoryId == category.Id;
+                                    <a href="?categoryId=@category.Id" 
+                                       class="list-group-item list-group-item-action @(isActive ? "active" : "")">
+                                        @category.Name
+                                        <span class="badge bg-secondary float-end">@category.Products?.Count</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                        
+                        <!-- Цена -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Цена</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" 
+                                           name="minPrice" placeholder="От" 
+                                           value="@(Model.MinPrice?.ToString() ?? "")"
+                                           onchange="document.getElementById('filterForm').submit()">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" 
+                                           name="maxPrice" placeholder="До" 
+                                           value="@(Model.MaxPrice?.ToString() ?? "")"
+                                           onchange="document.getElementById('filterForm').submit()">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Наличие -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Наличие</h6>
+                            <div class="form-check">
+                                @{
+                                    var isChecked = Model.InStock ? "checked" : "";
+                                }
+                                <input class="form-check-input" type="checkbox" 
+                                       name="inStock" id="inStock" value="true"
+                                       @isChecked
+                                       onchange="document.getElementById('filterForm').submit()">
+                                <label class="form-check-label" for="inStock">
+                                    Только в наличии
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Сортировка -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Сортировка</h6>
+                            <select class="form-select form-select-sm" 
+                                    name="sortBy" 
+                                    onchange="document.getElementById('filterForm').submit()">
+                                @foreach (var option in sortOptions)
+                                {
+                                    if (Model.SortBy == option.Key)
+                                    {
+                                        <option value="@option.Key" selected>@option.Value</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@option.Key">@option.Value</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
+                        <a href="?" class="btn btn-outline-secondary w-100 mt-2">Сбросить</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="col-lg-9">
+            <!-- Мобильные фильтры -->
+            <div class="mobile-only mb-4">
+                <div class="accordion" id="mobileFilters">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+                                <i class="bi bi-funnel me-2"></i>Фильтры и сортировка
+                            </button>
+                        </h2>
+                        <div id="filtersCollapse" class="accordion-collapse collapse" 
+                             data-bs-parent="#mobileFilters">
+                            <div class="accordion-body">
+                                <form method="get">
+                                    <div class="mb-3">
+                                        <label class="form-label">Категория</label>
+                                        <select class="form-select" name="categoryId">
+                                            <option value="">Все категории</option>
+                                            @foreach (var category in Model.Categories)
+                                            {
+                                                if (Model.CategoryId == category.Id)
+                                                {
+                                                    <option value="@category.Id" selected>@category.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@category.Id">@category.Name</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label">Цена от</label>
+                                            <input type="number" class="form-control" 
+                                                   name="minPrice" value="@(Model.MinPrice?.ToString() ?? "")">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label">Цена до</label>
+                                            <input type="number" class="form-control" 
+                                                   name="maxPrice" value="@(Model.MaxPrice?.ToString() ?? "")">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        @if (Model.InStock)
+                                        {
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="inStock" value="true" 
+                                                   id="mobileInStock" checked>
+                                        }
+                                        else
+                                        {
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="inStock" value="true" 
+                                                   id="mobileInStock">
+                                        }
+                                        <label class="form-check-label" for="mobileInStock">
+                                            Только в наличии
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Сортировка</label>
+                                        <select class="form-select" name="sortBy">
+                                            @foreach (var option in sortOptions)
+                                            {
+                                                if (Model.SortBy == option.Key)
+                                                {
+                                                    <option value="@option.Key" selected>@option.Value</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@option.Key">@option.Value</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary w-100">Применить</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Информация о фильтрах -->
+            @{
+                var showCategory = Model.CategoryId.HasValue && Model.CategoryId > 0;
+                var showMinPrice = Model.MinPrice.HasValue;
+                var showMaxPrice = Model.MaxPrice.HasValue;
+                var showInStock = Model.InStock;
+            }
+            
+            @if (showCategory || showMinPrice || showMaxPrice || showInStock)
+            {
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-muted">
+                                Найдено товаров: <strong>@Model.TotalProducts</strong>
+                            </span>
+                            
+                            @if (showCategory)
+                            {
+                                <span class="badge bg-primary">
+                                    Категория: @(Model.SelectedCategory?.Name ?? "Неизвестно")
+                                    <a href="?@Model.GetQueryStringWithoutParam("categoryId")" class="text-white ms-1">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                </span>
+                            }
+                            
+                            @if (showMinPrice)
+                            {
+                                <span class="badge bg-info">
+                                    От @(Model.MinPrice?.ToString("C0") ?? "0")
+                                    <a href="?@Model.GetQueryStringWithoutParam("minPrice")" class="text-white ms-1">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                </span>
+                            }
+                            
+                            @if (showMaxPrice)
+                            {
+                                <span class="badge bg-info">
+                                    До @Model.MaxPrice.Value.ToString("C0")
+                                    <a href="?@Model.GetQueryStringWithoutParam("maxPrice")" class="text-white ms-1">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                </span>
+                            }
+                            
+                            @if (showInStock)
+                            {
+                                <span class="badge bg-success">
+                                    В наличии
+                                    <a href="?@Model.GetQueryStringWithoutParam("inStock")" class="text-white ms-1">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <!-- Сетка товаров -->
+            @if (Model.Products.Any())
+            {
+                <div class="row product-grid">
+                    @foreach (var product in Model.Products)
+                    {
+                        <div class="col-12 col-md-6 col-xl-4 mb-4">
+                            <div class="card product-card h-100">
+                                <img src="@product.ImageUrl" 
+                                     class="card-img-top" 
+                                     alt="@product.Name"
+                                     loading="lazy">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="mb-2">
+                                        <span class="badge bg-secondary">@product.Category?.Name</span>
+                                        @if (product.Stock > 0)
+                                        {
+                                            <span class="badge bg-success">В наличии</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Нет в наличии</span>
+                                        }
+                                    </div>
+                                    
+                                    <h5 class="card-title">@product.Name</h5>
+                                    
+                                    @{
+                                        var description = product.Description;
+                                        var shortDescription = description.Length > 100 
+                                            ? description.Substring(0, 100) + "..." 
+                                            : description;
+                                    }
+                                    <p class="card-text text-muted flex-grow-1">
+                                        @shortDescription
+                                    </p>
+                                    
+                                    <div class="mt-auto">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="price h4 mb-0">@product.Price.ToString("C")</span>
+                                            <small class="text-muted">Осталось: @product.Stock шт.</small>
+                                        </div>
+                                        
+                                        <form method="post" asp-page="/Cart/Index" asp-page-handler="AddToCart">
+                                            <input type="hidden" name="productId" value="@product.Id" />
+                                            @if (product.Stock == 0)
+                                            {
+                                                <button type="button" class="btn btn-secondary w-100 btn-mobile" disabled>
+                                                    <i class="bi bi-cart-plus me-2"></i>Нет в наличии
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-primary w-100 btn-mobile">
+                                                    <i class="bi bi-cart-plus me-2"></i>В корзину
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Пагинация -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Навигация по страницам">
+                        <ul class="pagination justify-content-center">
+                            @{
+                                var prevDisabled = Model.CurrentPage == 1 ? "disabled" : "";
+                                var nextDisabled = Model.CurrentPage == Model.TotalPages ? "disabled" : "";
+                            }
+                            
+                            <li class="page-item @prevDisabled">
+                                <a class="page-link" 
+                                   href="?@Model.GetPaginationQueryString(Model.CurrentPage - 1)">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                if (i == 1 || i == Model.TotalPages || (i >= Model.CurrentPage - 2 && i <= Model.CurrentPage + 2))
+                                {
+                                    var active = i == Model.CurrentPage ? "active" : "";
+                                    <li class="page-item @active">
+                                        <a class="page-link" href="?@Model.GetPaginationQueryString(i)">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+                                else if (i == Model.CurrentPage - 3 || i == Model.CurrentPage + 3)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+                            
+                            <li class="page-item @nextDisabled">
+                                <a class="page-link" 
+                                   href="?@Model.GetPaginationQueryString(Model.CurrentPage + 1)">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-search display-1 text-muted"></i>
+                    <h3 class="mt-3">Товары не найдены</h3>
+                    <p class="text-muted">Попробуйте изменить параметры поиска</p>
+                    <a href="?" class="btn btn-primary">Сбросить фильтры</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

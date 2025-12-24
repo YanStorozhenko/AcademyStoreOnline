@@ -1,0 +1,414 @@
+@page
+@model OnlineStore.Pages.Account.ProfileModel
+@{
+    ViewData["Title"] = "Личный кабинет";
+}
+
+<div class="container">
+    <div class="row">
+        <!-- Боковая панель -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="avatar-circle mb-2">
+                            <i class="bi bi-person-circle display-1 text-primary"></i>
+                        </div>
+                        <h5>@User.Identity?.Name</h5>
+                        <p class="text-muted small">Покупатель</p>
+                    </div>
+                    
+                    <div class="list-group list-group-flush">
+                        <a href="#profile" 
+                           class="list-group-item list-group-item-action active"
+                           onclick="showSection('profile')">
+                            <i class="bi bi-person me-2"></i>Профиль
+                        </a>
+                        <a href="#orders" 
+                           class="list-group-item list-group-item-action"
+                           onclick="showSection('orders')">
+                            <i class="bi bi-box-seam me-2"></i>Мои заказы
+                        </a>
+                        <a href="/Cart" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-cart me-2"></i>Корзина
+                        </a>
+                        <a href="/Catalog" 
+                           class="list-group-item list-group-item-action">
+                            <i class="bi bi-shop me-2"></i>Каталог
+                        </a>
+                        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" method="post">
+                            <button type="submit" class="list-group-item list-group-item-action text-start border-0 bg-transparent w-100">
+                                <i class="bi bi-box-arrow-right me-2"></i>Выйти
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="col-lg-9">
+            <!-- Раздел профиля -->
+            <div id="profile-section" class="profile-section">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Мой профиль</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-page-handler="UpdateProfile">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Имя пользователя</label>
+                                    <input type="text" class="form-control" 
+                                           value="@User.Identity?.Name" disabled>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" 
+                                           name="email" value="@Model.Email">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Телефон</label>
+                                    <input type="tel" class="form-control" 
+                                           name="phoneNumber" value="@Model.PhoneNumber">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Дата регистрации</label>
+                                    <input type="text" class="form-control" 
+                                           value="@Model.RegistrationDate?.ToString("dd.MM.yyyy")" disabled>
+                                </div>
+                            </div>
+                            
+                            <h6 class="border-bottom pb-2 mb-3">Адрес доставки</h6>
+                            
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Адрес</label>
+                                    <input type="text" class="form-control" 
+                                           name="address" value="@Model.Address">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Город</label>
+                                    <input type="text" class="form-control" 
+                                           name="city" value="@Model.City">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Индекс</label>
+                                    <input type="text" class="form-control" 
+                                           name="postalCode" value="@Model.PostalCode">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Страна</label>
+                                    <input type="text" class="form-control" 
+                                           name="country" value="@Model.Country">
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>Сохранить изменения
+                                </button>
+                                <a href="/Identity/Account/Manage/ChangePassword" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-key me-2"></i>Изменить пароль
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Раздел заказов -->
+            <div id="orders-section" class="profile-section d-none">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Мои заказы</h5>
+                        <span class="badge bg-light text-primary">@Model.Orders.Count заказов</span>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Orders.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>№ Заказа</th>
+                                            <th>Дата</th>
+                                            <th>Товары</th>
+                                            <th>Сумма</th>
+                                            <th>Статус</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var order in Model.Orders)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <strong>#@order.Id</strong>
+                                                </td>
+                                                <td>@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                                <td>@order.Items.Count товар(ов)</td>
+                                                <td>
+                                                    <strong>@order.TotalAmount.ToString("C")</strong>
+                                                </td>
+                                                <td>
+                                                    @{
+                                                        var badgeClass = order.Status switch
+                                                        {
+                                                            "Ожидает оплаты" => "warning",
+                                                            "Оплачен" => "success",
+                                                            "В обработке" => "info",
+                                                            "Отправлен" => "primary",
+                                                            "Доставлен" => "success",
+                                                            "Отменен" => "danger",
+                                                            _ => "secondary"
+                                                        };
+                                                    }
+                                                    <span class="badge bg-@badgeClass">@order.Status</span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" 
+                                                            onclick="showOrderDetails(@order.Id)"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#orderModal">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Статистика -->
+                            <div class="row mt-4">
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Всего заказов</h6>
+                                            <h4 class="text-primary">@Model.Orders.Count</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Общая сумма</h6>
+                                            <h4 class="text-success">@Model.Orders.Sum(o => o.TotalAmount).ToString("C")</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Средний чек</h6>
+                                            <h4 class="text-info">
+                                                @(Model.Orders.Any() 
+                                                    ? (Model.Orders.Sum(o => o.TotalAmount) / Model.Orders.Count).ToString("C") 
+                                                    : "0 ₽")
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Последний заказ</h6>
+                                            <h6 class="text-muted">
+                                                @(Model.Orders.OrderByDescending(o => o.OrderDate).FirstOrDefault()?.OrderDate.ToString("dd.MM.yyyy") ?? "Нет")
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-box-seam display-1 text-muted mb-4"></i>
+                                <h4>У вас еще нет заказов</h4>
+                                <p class="text-muted mb-4">Сделайте свой первый заказ прямо сейчас!</p>
+                                <a href="/Catalog" class="btn btn-primary">
+                                    <i class="bi bi-shop me-2"></i>Перейти в каталог
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно деталей заказа -->
+<div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детали заказа</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetails">
+                <!-- Детали заказа будут загружены здесь -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    .profile-section {
+        transition: all 0.3s ease;
+    }
+    
+    .order-item {
+        border-bottom: 1px solid #eee;
+        padding: 10px 0;
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<script>
+    // Показ разных разделов
+    function showSection(sectionId) {
+        // Скрываем все разделы
+        document.querySelectorAll('.profile-section').forEach(section => {
+            section.classList.add('d-none');
+        });
+        
+        // Убираем активный класс у всех ссылок
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Показываем выбранный раздел
+        document.getElementById(sectionId + '-section').classList.remove('d-none');
+        
+        // Добавляем активный класс к выбранной ссылке
+        event.target.closest('.list-group-item').classList.add('active');
+    }
+    
+    // Загрузка деталей заказа
+    async function showOrderDetails(orderId) {
+        try {
+            const response = await fetch(`/api/orders/${orderId}`);
+            if (response.ok) {
+                const order = await response.json();
+                displayOrderDetails(order);
+            }
+        } catch (error) {
+            console.error('Error loading order details:', error);
+            document.getElementById('orderDetails').innerHTML = 
+                '<div class="alert alert-danger">Ошибка загрузки данных заказа</div>';
+        }
+    }
+    
+    // Отображение деталей заказа
+    function displayOrderDetails(order) {
+        let html = `
+            <div class="mb-4">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Информация о заказе</h6>
+                        <p><strong>№ Заказа:</strong> #${order.id}</p>
+                        <p><strong>Дата:</strong> ${new Date(order.orderDate).toLocaleDateString('ru-RU')}</p>
+                        <p><strong>Статус:</strong> <span class="badge bg-${getStatusBadgeClass(order.status)}">${order.status}</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Сумма</h6>
+                        <p><strong>Общая стоимость:</strong> ${formatCurrency(order.totalAmount)}</p>
+                        <p><strong>Способ оплаты:</strong> ${order.paymentMethod || 'Не указан'}</p>
+                        <p><strong>Способ доставки:</strong> ${order.deliveryMethod || 'Не указан'}</p>
+                    </div>
+                </div>
+                
+                <h6>Товары в заказе</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Товар</th>
+                                <th>Цена</th>
+                                <th>Количество</th>
+                                <th>Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+        
+        order.items.forEach(item => {
+            html += `
+                <tr>
+                    <td>${item.productName}</td>
+                    <td>${formatCurrency(item.price)}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatCurrency(item.price * item.quantity)}</td>
+                </tr>`;
+        });
+        
+        html += `
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Итого:</strong></td>
+                                <td><strong>${formatCurrency(order.totalAmount)}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <h6>Адрес доставки</h6>
+                <p>${order.address || 'Не указан'}</p>
+            </div>`;
+        
+        document.getElementById('orderDetails').innerHTML = html;
+    }
+    
+    function getStatusBadgeClass(status) {
+        const statusMap = {
+            'Ожидает оплаты': 'warning',
+            'Оплачен': 'success',
+            'В обработке': 'info',
+            'Отправлен': 'primary',
+            'Доставлен': 'success',
+            'Отменен': 'danger'
+        };
+        return statusMap[status] || 'secondary';
+    }
+    
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB'
+        }).format(amount);
+    }
+    
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        // По умолчанию показываем профиль
+        showSection('profile');
+    });
+</script>

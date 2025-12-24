@@ -1,0 +1,223 @@
+@page
+@model OnlineStore.Pages.Cart.IndexModel
+@{
+    ViewData["Title"] = "Корзина покупок";
+    
+    // Рассчитываем суммы заранее
+    var itemsCount = Model.CartItems.Sum(i => i.Quantity);
+    var subtotal = Model.CartItems.Sum(i => (i.Product?.Price ?? 0) * i.Quantity);
+    var discount = 0m;
+    var total = subtotal - discount;
+}
+
+<div class="container">
+    <h1 class="mb-4">🛒 Корзина покупок</h1>
+    
+    @if (Model.CartItems.Any())
+    {
+        <div class="row">
+            <!-- Список товаров -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Ваши товары (@itemsCount шт.)</h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            var itemTotal = (item.Product?.Price ?? 0) * item.Quantity;
+                            var itemPrice = item.Product?.Price ?? 0;
+                            
+                            <div class="cart-item-mobile mb-3 pb-3 border-bottom">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <img src="@item.Product?.ImageUrl" 
+                                             class="img-fluid rounded cart-item-image" 
+                                             alt="@item.Product?.Name">
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h5 class="mb-1">@item.Product?.Name</h5>
+                                                <p class="text-muted mb-2">@item.Product?.Category?.Name</p>
+                                                <p class="mb-0">
+                                                    <strong class="h5">@itemTotal.ToString("C")</strong>
+                                                    <small class="text-muted ms-2">
+                                                        (@itemPrice.ToString("C") × @item.Quantity)
+                                                    </small>
+                                                </p>
+                                            </div>
+                                            @if (item.Product?.Stock > 0)
+                                            {
+                                                <span class="badge bg-success">В наличии</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Нет в наличии</span>
+                                            }
+                                        </div>
+                                        
+                                        <div class="d-flex align-items-center justify-content-between mt-3">
+                                            <div class="quantity-control">
+                                                <form method="post" asp-page-handler="UpdateQuantity" class="d-inline">
+                                                    <input type="hidden" name="cartItemId" value="@item.Id" />
+                                                    <input type="hidden" name="change" value="-1" />
+                                                    <button type="submit" 
+                                                            class="btn btn-outline-secondary btn-sm quantity-btn"
+                                                            @(item.Quantity <= 1 ? "disabled" : "")>
+                                                        <i class="bi bi-dash"></i>
+                                                    </button>
+                                                </form>
+                                                
+                                                <span class="mx-3 h5">@item.Quantity</span>
+                                                
+                                                <form method="post" asp-page-handler="UpdateQuantity" class="d-inline">
+                                                    <input type="hidden" name="cartItemId" value="@item.Id" />
+                                                    <input type="hidden" name="change" value="1" />
+                                                    <button type="submit" 
+                                                            class="btn btn-outline-secondary btn-sm quantity-btn"
+                                                            @(item.Quantity >= 10 ? "disabled" : "")>
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            
+                                            <form method="post" asp-page-handler="RemoveItem">
+                                                <input type="hidden" name="cartItemId" value="@item.Id" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Удалить
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        
+                        <div class="text-end">
+                            <a href="/Catalog" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Продолжить покупки
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Итого -->
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Итого</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Товары</span>
+                                <span>@subtotal.ToString("C")</span>
+                            </div>
+                            
+                            @if (discount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span>Скидка</span>
+                                    <span>-@discount.ToString("C")</span>
+                                </div>
+                            }
+                            
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong>Общая стоимость:</strong>
+                                <strong class="h4">@total.ToString("C")</strong>
+                            </div>
+                            
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form method="post" asp-page-handler="Checkout">
+                                    <button type="submit" class="btn btn-success w-100 btn-mobile">
+                                        <i class="bi bi-check-circle"></i> Оформить заказ
+                                    </button>
+                                </form>
+                                
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">Нажимая кнопку, вы соглашаетесь с условиями покупки</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Для оформления заказа необходимо войти в систему
+                                </div>
+                                
+                                <a href="/Identity/Account/Login?returnUrl=/Cart" class="btn btn-primary w-100 btn-mobile">
+                                    <i class="bi bi-box-arrow-in-right"></i> Войти
+                                </a>
+                                
+                                <a href="/Identity/Account/Register?returnUrl=/Cart" class="btn btn-outline-primary w-100 mt-2">
+                                    <i class="bi bi-person-plus"></i> Зарегистрироваться
+                                </a>
+                            }
+                        </div>
+                        
+                        <!-- Информация о доставке -->
+                        <div class="border-top pt-3">
+                            <h6 class="mb-2">Информация о доставке</h6>
+                            <ul class="list-unstyled small text-muted">
+                                <li><i class="bi bi-check text-success"></i> Бесплатная доставка от 5000 ₽</li>
+                                <li><i class="bi bi-check text-success"></i> Доставка 1-3 рабочих дня</li>
+                                <li><i class="bi bi-check text-success"></i> Возврат в течение 14 дней</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-cart-x display-1 text-muted"></i>
+            </div>
+            <h3 class="mb-3">Ваша корзина пуста</h3>
+            <p class="text-muted mb-4">Добавьте товары из каталога, чтобы продолжить покупки</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/Catalog" class="btn btn-primary btn-lg">
+                    <i class="bi bi-shop me-2"></i>Перейти в каталог
+                </a>
+                <a href="/" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-house me-2"></i>На главную
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Успешно!</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                @TempData["Success"]
+            </div>
+        </div>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-danger text-white">
+                <strong class="me-auto">Ошибка!</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                @TempData["Error"]
+            </div>
+        </div>
+    </div>
+}

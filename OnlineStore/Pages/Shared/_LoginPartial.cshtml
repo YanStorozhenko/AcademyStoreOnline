@@ -1,0 +1,56 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle me-2"></i>
+                @User.Identity?.Name
+                
+                <!-- Бейдж роли -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <span class="badge bg-danger ms-2">Admin</span>
+                }
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-page="/Account/Profile">
+                    <i class="bi bi-person me-2"></i>Личный кабинет
+                </a></li>
+                
+                <!-- Ссылка на админ-панель только для админов -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <li><a class="dropdown-item text-danger" asp-page="/Admin/Index">
+                        <i class="bi bi-shield-lock me-2"></i>Админ-панель
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                }
+                
+                <li>
+                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" method="post">
+                        <button type="submit" class="dropdown-item">
+                            <i class="bi bi-box-arrow-right me-2"></i>Выйти
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
+                <i class="bi bi-person-plus me-1"></i>Регистрация
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Войти
+            </a>
+        </li>
+    }
+</ul>
